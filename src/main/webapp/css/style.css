@@ -1,0 +1,279 @@
+/* ===== RPG Battle スタイル（明るくポップ／レスポンシブ） =====
+   PC   ：上段＝味方｜敵、下段＝コマンド｜ログ
+   スマホ：敵 → 味方 → コマンド → ログ（HPを見た場所のすぐ隣にコマンド） */
+:root {
+    --bg-top: #dff1ff;
+    --bg-bottom: #fff6df;
+    --navy: #243b6b;
+    --ink: #1f2a44;
+    --muted: #5b6b8c;
+    --card: #ffffff;
+    --soft: #f1f7ff;
+    --accent: #ff9f1c;
+    --accent-soft: #ffe7bf;
+    --ok: #2fbf71;
+    --warn: #f4a300;
+    --danger: #e5484d;
+    --sky: #4dabf7;
+    --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%) fixed;
+    line-height: 1.6;
+}
+
+.container { max-width: 1040px; margin: 0 auto; padding: 16px 14px 48px; }
+h1, h2, p { margin: 0; }
+
+/* 画面上は見せないが、読み上げ用には残す */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ----- 共通パーツ ----- */
+.panel {
+    background: var(--card);
+    border: 3px solid var(--navy);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 0 var(--navy);
+    padding: 12px 14px 14px;
+}
+.panel-title { margin-bottom: 8px; font-size: 1rem; color: var(--navy); }
+
+.btn {
+    display: inline-block;
+    min-height: 48px;
+    padding: 10px 26px;
+    border: 3px solid var(--navy);
+    border-radius: 14px;
+    box-shadow: 0 4px 0 var(--navy);
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    color: var(--navy);
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn:hover { filter: brightness(1.05); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--navy); }
+.btn:disabled { opacity: 0.6; cursor: wait; }
+.btn:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+.btn-block { display: block; width: 100%; margin-top: 12px; }
+.actions { margin-top: 20px; text-align: center; }
+
+.page-header { text-align: center; padding: 18px 0 8px; }
+.page-header h1 { font-size: clamp(1.7rem, 6vw, 2.5rem); color: var(--navy); }
+.page-header .lead { margin-top: 4px; color: var(--muted); }
+
+/* ----- 画面レイアウト ----- */
+.battle-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas: "enemy" "party" "command" "log";
+    gap: 14px;
+    align-items: start;
+}
+#enemy-panel { grid-area: enemy; }
+.party-panel { grid-area: party; }
+.command-panel { grid-area: command; }
+.log-panel { grid-area: log; }
+
+@media (min-width: 860px) {
+    .battle-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "party   enemy"
+            "command log";
+    }
+}
+
+/* ----- 立ち絵（画像がない場合は頭文字を表示） ----- */
+.portrait {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #fff; /* 立ち絵が水色・オレンジ両方のカード上で浮き立つよう白地に */
+    border: 2px solid #cfe3ff;
+    overflow: hidden;
+}
+.portrait.lg { width: 76px; height: 76px; }
+.portrait img { max-width: 92%; max-height: 92%; object-fit: contain; }
+/* 味方は胸から上の立ち絵なので、枠の下辺に接地させる */
+.member .portrait img { align-self: flex-end; max-height: 96%; }
+.portrait.no-img::after {
+    content: attr(data-initial);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--navy);
+}
+
+/* ----- 味方 ----- */
+.member {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 3px solid transparent;
+    border-radius: 14px;
+    background: var(--soft);
+}
+.member.active { border-color: var(--accent); background: var(--accent-soft); }
+.member-body { flex: 1; min-width: 0; }
+.member-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.member-name { font-weight: 700; }
+.hp-num { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 8px;
+    font-size: 0.72rem;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--sky);
+}
+
+/* ----- HP / MPバー ----- */
+.bar {
+    display: block;
+    width: 100%;
+    height: 12px;
+    margin-top: 4px;
+    border: 2px solid var(--navy);
+    border-radius: 999px;
+    background: #e8eefb;
+    overflow: hidden;
+}
+.bar-fill { display: block; height: 100%; transition: width 0.4s ease; }
+.bar-fill.ok { background: var(--ok); }
+.bar-fill.warn { background: var(--warn); }
+.bar-fill.danger { background: var(--danger); }
+.bar-fill.mp { background: var(--sky); }
+
+.mp-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.mp-row .bar { flex: 1; margin-top: 0; }
+
+/* ----- 敵（カードをクリックして攻撃対象を選ぶ） ----- */
+.enemy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px; }
+.enemy { display: block; position: relative; cursor: pointer; }
+.enemy input { position: absolute; opacity: 0; pointer-events: none; }
+.enemy-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 24px 8px 10px; /* 上の余白は「▼ Target」表示用 */
+    border: 3px solid transparent;
+    border-radius: 14px;
+    background: var(--soft);
+    text-align: center;
+    transition: border-color 0.12s ease, background 0.12s ease;
+}
+.enemy:hover .enemy-card { border-color: #9cc4ff; }
+.enemy input:checked + .enemy-card { border-color: var(--accent); background: var(--accent-soft); }
+.enemy input:checked + .enemy-card::before {
+    content: "▼ Target";
+    position: absolute;
+    top: 4px;
+    left: 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--navy);
+}
+.enemy input:focus-visible + .enemy-card { outline: 3px solid var(--sky); outline-offset: 2px; }
+.enemy-name { font-weight: 700; font-size: 0.92rem; }
+
+/* スマホ：敵5体を3列にまとめ、コマンドまでのスクロールを短くする */
+@media (max-width: 859px) {
+    .enemy-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .enemy-card { padding: 20px 4px 8px; gap: 2px; }
+    .enemy input:checked + .enemy-card::before { top: 2px; left: 8px; }
+    .portrait.lg { width: 60px; height: 60px; }
+    .enemy-name { font-size: 0.8rem; line-height: 1.4; }
+    .enemy .hp-num { font-size: 0.72rem; }
+}
+
+/* 対象を選ばない行動（変身・守る）のときは、敵カードを薄くする */
+#enemy-panel.no-target .enemy { cursor: default; }
+#enemy-panel.no-target .enemy-card { opacity: 0.6; border-color: transparent; background: var(--soft); }
+#enemy-panel.no-target .enemy input:checked + .enemy-card::before { display: none; }
+
+/* ----- コマンド ----- */
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.note { color: var(--muted); }
+
+.choice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.choice { display: block; position: relative; cursor: pointer; }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice span {
+    display: block;
+    min-height: 52px;
+    padding: 8px 12px;
+    border: 3px solid #cfe3ff;
+    border-radius: 14px;
+    background: var(--soft);
+    font-weight: 700;
+    transition: border-color 0.12s ease, background 0.12s ease;
+}
+.choice small { display: block; font-weight: 400; font-size: 0.78rem; color: var(--muted); }
+.choice:hover span { border-color: #9cc4ff; }
+.choice input:checked + span { border-color: var(--accent); background: var(--accent-soft); }
+.choice input:focus-visible + span { outline: 3px solid var(--sky); outline-offset: 2px; }
+
+/* ----- 戦闘ログ（直近3件が見える高さ。上にスクロールで履歴） ----- */
+.log-box {
+    height: 6.6rem;
+    padding: 6px 12px;
+    border: 3px solid var(--navy);
+    border-radius: 12px;
+    background: #fff;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.log-item { padding: 2px 0; font-size: 0.92rem; line-height: 1.6; } /* 改行は空白にして1件1行で表示 */
+.log-item::before { content: "・"; }
+.log-item.sep { color: #b4232a; font-weight: 700; }
+.log-item.sep::before { content: ""; }
+.log-empty { color: var(--muted); font-size: 0.92rem; }
+
+/* ----- 結果・タイトル ----- */
+.result { margin-top: 40px; padding: 32px 16px; text-align: center; }
+.result h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); color: var(--navy); }
+.result p { margin-top: 8px; color: var(--muted); }
+.result.win h2 { color: #d97a00; }
+.result.lose h2 { color: #b4232a; }
+.result .portrait { margin: 0 auto 10px; width: 96px; height: 96px; }
+.result-log { height: auto; max-height: 10rem; margin: 16px auto 0; max-width: 520px; text-align: left; }
+
+.hero { padding: 64px 16px 24px; text-align: center; }
+.hero h1 { font-size: clamp(2rem, 8vw, 3rem); color: var(--navy); }
+.hero p { margin-top: 8px; color: var(--muted); }
+.hero .btn { margin-top: 28px; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
