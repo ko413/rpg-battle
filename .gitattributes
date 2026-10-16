@@ -1,0 +1,3 @@
+# 改行コードをOSに関係なく固定する（Windowsでcloneしても mvnw が壊れないように）
+mvnw text eol=lf
+*.cmd text eol=crlf
